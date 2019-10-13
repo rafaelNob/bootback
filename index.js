@@ -32,11 +32,18 @@ server.get('/', (req, res, next) => {
     }, next)
 });
 
-server.get('/r/horario', (req, res, next) => {
+/* server.get('/r/horario', (req, res, next) => {
     knex('horarios').then((dados) => {
         res.send(dados);
     }, next)
+}); */
+
+server.get('/r/horario', (req, res, next) => {
+    knex('horarios').whereBetween('dHoraInicial', ["2019-10-05","2019-12-30"]).then((dados) => {
+        res.send(dados);
+    }, next)  
 });
+
 
 server.get('/r/horario/:id', (req, res, next) => {
     const { id } = req.params;
