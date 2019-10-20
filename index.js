@@ -200,7 +200,7 @@ server.get('/r/horarios/horasdisponiveis/:nCdEspecialidade/:nCdHospital/:data', 
                 INNER JOIN MEDICO_ESPECIALIDADE ON MEDICO_ESPECIALIDADE.nCdMedico = HORARIOS.nCdMedico
             WHERE CONVERT(DATE,HORARIOS.dHoraInicial)  = CONVERT(DATE, ?)       
                 AND MEDICO_ESPECIALIDADE.nCdEspecialidade = ?
-                AND HORARIOS.nCdMedico = ?
+                AND HORARIOS.nCdHospital = ?
                 AND (
                     not EXISTS(SELECT 1 FROM CONSULTA WITH(NOLOCK) WHERE CONSULTA.nCdHorario = HORARIOS.nCdHorario)
                     and not EXISTS(SELECT 1 FROM EXAME WITH(NOLOCK) WHERE EXAME.nCdHorario = HORARIOS.nCdHorario )
@@ -239,14 +239,13 @@ server.get('/CONSULTA', (req, res, next) => {
         })
     }) */
     server.post('/CONSULTA', function(req, res) {
-        let paramCodConsulta = req.body.nCdConsulta;
+        let paramCodHorario =  req.body.nCdHorario;
           let paramCodPaciente = req.body.nCdPaciente;
-          let nCdEspecialidade = req.body.nCdPaciente;
-          console.log("Entrou");
-          
-            knex.raw(`exec inserirConsulta ? , ?, ? `, [paramCodConsulta,paramCodPaciente,nCdEspecialidade])
+          let nCdEspecialidade = req.body.nCdEspecialidade;
+          console.log("Entrou" + '....' + nCdEspecialidade);
+            knex.raw(`exec inserirConsulta ?, ?, ? `, [paramCodHorario,paramCodPaciente,nCdEspecialidade])
               .then(function() {
-                  knex.select().from('CONSULTA').
+                  knex.select('nCdConsulta').from('CONSULTA').where('nCdHorario', paramCodHorario).
                     then(function(CONSULTA){
                       res.send(CONSULTA);
                   })
@@ -285,7 +284,7 @@ server.get('/consulta2', (req, res, next) => {
 
 });
 7
-server.put('/consulta2/insert', (req, res, next) => {
+server.post('/consulta2/insert', (req, res, next) => {
     console.log(req.body);
 
     knex('consulta')
