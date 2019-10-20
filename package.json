@@ -9,11 +9,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "cors": "^2.8.5",
-    "knex": "^0.14.2",
+    "dateformat": "^3.0.3",
+    "knex": "^0.19.5",
     "mssql": "^5.1.0",
     "mysql": "^2.15.0",
-    "restify": "^6.3.4",
+    "nodemon": "^1.19.3",
+    "restify": "^8.4.0",
     "restify-errors": "^5.0.0"
   }
 }
