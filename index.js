@@ -190,7 +190,27 @@ server.get('/r/horarios/datasdisponiveis/:nCdEspecialidade/:nCdHospital', (req, 
 //TRAZER HORA MAROTA
 server.get('/r/horarios/horasdisponiveis/:nCdEspecialidade/:nCdHospital/:data', (req, res, next) => {
     console.log('teste');
+/*     agendarExame: "agendarExame"
+codExame: 1
+data: "20191023"
+especialidade: undefined
+hospital: "Bela Vista"
+nCdHospital: 1
+nCdPaciente: 1
+nomeExame: "Raio X"
+nomeUnidade: "Bela Vista"
+ultimaData: "23/10/2019" */
 
+/* codExame: undefined
+especialidade: "Cardiologia"
+hospital: "Bela Vista"
+nCdEspecialidade: 31
+nCdHospital: 1
+nCdPaciente: 1
+nomeExame: "Cardiologia"
+nomeUnidade: "Bela Vista"
+ultimaData: "23/10/2019"
+ */
     let { nCdEspecialidade } = req.params;
     let { nCdHospital } = req.params;
     let { data } = req.params;
@@ -213,10 +233,6 @@ server.get('/r/horarios/horasdisponiveis/:nCdEspecialidade/:nCdHospital/:data', 
     });
     console.log('tested');
 });
-/*  EXEC inserirConsulta ?,?,?
-cod horario, paciente, especialidade
-
-*/
 
 server.get('/CONSULTA', (req, res, next) => {
     console.log(req.body);
@@ -225,19 +241,7 @@ server.get('/CONSULTA', (req, res, next) => {
         res.send(CONSULTA);
     })
 });
-/* server.post('/salvarBanco', function (req, res) {
-    let nCdHorario = req.body.nCdHorario;
-    let nCdPaciente = req.body.nCdPaciente;
-    let nCdEspecialidade = req.body.nCdEspecialidade;
-    knex.raw(`exec inserirConsulta ? , ? , ?`, [nCdHorario, nCdPaciente, nCdEspecialidade])
-        .then(function () {
-            knex.select().from('CONSULTA').
-                then(function (CONSULTA) {
-                    res.send(CONSULTA);
-                })
 
-        })
-    }) */
     server.post('/CONSULTA', function(req, res) {
         let paramCodHorario =  req.body.nCdHorario;
           let paramCodPaciente = req.body.nCdPaciente;
@@ -248,48 +252,105 @@ server.get('/CONSULTA', (req, res, next) => {
                   knex.select('nCdConsulta').from('CONSULTA').where('nCdHorario', paramCodHorario).
                     then(function(CONSULTA){
                       res.send(CONSULTA);
-                  })
-              })
-      });
+                })
+            })
+     });
+
+
+     /**
+      * DADOS CONUSLTA EXAME 
+      */
+
+     server.get('/exame/:id', (req, res, next) => {
+        let { id } = req.params;
+        console.log("Id do parame " + id);
+        
+        id = id.replace('-', '/');
+        console.log(id);
     
-  
+        knex('TIPO_EXAME')
+            .where('cNmTpExame','like', "%"+id+"%")
+            .first()
+            .then((dados) => {
+                if (!dados) return res.send(new errs.BadRequestError('nada foi encontrado'))
+                res.send(dados);
+    
+            }, next);
+    
+    });
 
-/*   dHoraInicial: "28/10/2019 23:00"
-data: "20191028"
-especialidade: "Cardiologia"
-hospital: "Morumbi"
-nCdEspecialidade: 31
-nCdHorario: 75057
-nCdHospital: 2
-nCdPaciente: 1
-ultimaData: "28/10/2019"
-ultimaHora: "23:00 */
 
-/* {
-    "nCdConsulta": 5318,
-    "cDecricao": "UTILIZADO PARA TESTES",
-    "nCdHorario": 74486,
-    "nCdPaciente": 1,
-    "nCdTpConsulta": 1,
-    "dHoraInicial": "2019-10-17T01:30:00.000Z",
-    "dHoraFinal": "2019-10-17T02:00:00.000Z",
-    "nCdMedico": 2,
-    "nCdHospital": 2
-}, */
+    server.get('/r/horarios/exame/datasdisponiveis/:nCdHospital', (req, res, next) => {
+    
+    const { nCdHospital } = req.params;
+    let data_atual = new Date();
+    let data_futura = new Date();
+    data_futura.addMonths(parseInt(3));
+    console.log("Bateuuu na data" + data_atual + " --- " + data_futura);
+    console.log("nCdHospital ====  " +nCdHospital );
+    
 
-server.get('/consulta2', (req, res, next) => {
-    knex('consulta').then((dados) => {
+    // const { meses } = req.params;
+    // data_futura.addMonths(parseInt(meses));
+    let sql = `EXEC consultaDatasDisponiveis '${dateFormat(data_atual, 'yyyymmdd')}', '${dateFormat(data_futura, 'yyyymmdd')}', ? `;
+
+    knex.raw(sql, [nCdHospital]).then(function (dados) {
+        console.log('testing1');
+        if (!dados) return res.send(new errs.BadRequestError('nada foi encontrado'))
         res.send(dados);
-    }, next)
-
+        console.log('testing2');
+    });
 });
-7
-server.post('/consulta2/insert', (req, res, next) => {
+
+server.get('/r/horarios/exame/horasdisponiveis/:nCdHospital/:data', (req, res, next) => {
+    console.log('teste');
+
+    let { codExame } = req.params;
+    let { nCdHospital } = req.params;
+    let { data } = req.params;
+
+    console.log(codExame);
+    console.log(nCdHospital);
+    console.log(data);
+    
+    let sql = `
+        SELECT HORA_INICIAL = (CONVERT(VARCHAR(12),HORARIOS.dHoraInicial,108))
+        ,HORARIOS.nCdHorario FROM HORARIOS WITH(NOLOCK)
+               
+            WHERE CONVERT(DATE,HORARIOS.dHoraInicial)  = CONVERT(DATE, ?)       
+               
+                AND HORARIOS.nCdHospital = ?
+                AND (
+                    not EXISTS(SELECT 1 FROM CONSULTA WITH(NOLOCK) WHERE CONSULTA.nCdHorario = HORARIOS.nCdHorario)
+                    and not EXISTS(SELECT 1 FROM EXAME WITH(NOLOCK) WHERE EXAME.nCdHorario = HORARIOS.nCdHorario )
+                ) ORDER BY HORARIOS.dHoraInicial`;
+    knex.raw(sql, [data, nCdHospital]).then(function (dados) {
+        console.log('testing1');
+        if (!dados) return res.send(new errs.BadRequestError('nada foi encontrado'))
+        res.send(dados);
+        console.log('testing2');
+    });
+    console.log('tested');
+});
+
+server.get('/exame', (req, res, next) => {
     console.log(req.body);
 
-    knex('consulta')
-        .insert(req.body)
-        .then((dados) => {
-            res.send(dados);
-        }, next)
+    knex.select().from('EXAME').then(function (EXAME) {
+        res.send(EXAME);
+    })
 });
+
+    server.post('/exame', function(req, res) {
+        let paramCodHorario =  req.body.nCdHorario;
+          let paramCodPaciente = req.body.nCdPaciente;
+          let nCdExame = req.body.nCdExame;
+          console.log("Entrou" + '....' + nCdExame);
+            knex.raw(`exec inserirExame ?, ?, ? `, [paramCodHorario,paramCodPaciente,nCdExame])
+              .then(function() {
+                  knex.select('nCdExame').from('EXAME').where('nCdHorario', paramCodHorario).
+                    then(function(EXAME){
+                      res.send(EXAME);
+                })
+            })
+     });
