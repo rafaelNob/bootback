@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "dateformat": "^3.0.3",
-    "knex": "^0.19.5",
+    "knex": "^2.4.0",
     "mssql": "^5.1.0",
     "mysql": "^2.15.0",
     "nodemon": "^1.19.3",
